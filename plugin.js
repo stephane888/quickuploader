@@ -2,6 +2,11 @@ CKEDITOR.plugins.add("quickuploader", {
   requires: "filetools,dialog",
   icons: "quickuploader,quickuploaderUpload",
   init: function(editor) {
+    //configs*
+    console.log("CKEDITOR.config : ", CKEDITOR.config);
+    const baseUrl = CKEDITOR.config.quickuploaderUploadUrl
+      ? CKEDITOR.config.quickuploaderUploadUrl
+      : "";
     //
     CKEDITOR.dialog.add(
       "quickuploaderDialog",
@@ -22,7 +27,7 @@ CKEDITOR.plugins.add("quickuploader", {
             //reader.onload = () => resolve(reader.result);
             reader.onloadend = () => {
               var fileArray = reader.result.split(",");
-              resolve({ src: reader.result, base64: fileArray[1] });
+              resolve({src: reader.result, base64: fileArray[1]});
             };
             reader.onerror = error => reject(error);
           });
@@ -37,16 +42,16 @@ CKEDITOR.plugins.add("quickuploader", {
                     href: this.baseUrl + "/rest/type/file/image"
                   }
                 },
-                filename: [{ value: file.name }],
-                filemime: [{ value: file.type }],
-                uri: [{ value: "public://ckeditor-images/" + file.name }],
-                type: [{ target_id: "image" }],
-                data: [{ value: fileBase64.base64 }]
+                filename: [{value: file.name}],
+                filemime: [{value: file.type}],
+                uri: [{value: "public://ckeditor-images/" + file.name}],
+                type: [{target_id: "image"}],
+                data: [{value: fileBase64.base64}]
               };
               var invocation = new XMLHttpRequest();
               invocation.open(
                 "POST",
-                "http://gestion-tache-new.kksa/entity/file?_format=hal_json",
+                baseUrl + "/entity/file?_format=hal_json",
                 true
               );
               invocation.onreadystatechange = handler;
@@ -63,11 +68,7 @@ CKEDITOR.plugins.add("quickuploader", {
           return new Promise(resolv => {
             getBase64(file).then(fileEncode => {
               var invocation = new XMLHttpRequest();
-              invocation.open(
-                "POST",
-                "http://gestion-tache-new.kksa/filesmanager/post",
-                true
-              );
+              invocation.open("POST", baseUrl + "/filesmanager/post", true);
               invocation.onreadystatechange = handler;
               invocation.send(fileEncode);
               function handler(reponse) {
@@ -97,10 +98,9 @@ CKEDITOR.plugins.add("quickuploader", {
                 }),
                 cache: "default"
               };
-              fetch(
-                "http://gestion-tache-new.kksa/filesmanager/post",
-                myInit
-              ).then(function(response) {
+              fetch(baseUrl + "/filesmanager/post", myInit).then(function(
+                response
+              ) {
                 response.json().then(function(json) {
                   console.log("response json : ", json);
                   resolv({
@@ -131,7 +131,7 @@ CKEDITOR.plugins.add("quickuploader", {
               //////////////////////////////////////////////
               var loader = editor.uploadRepository.create(file);
               loader.loadAndUpload(
-                "http://gestion-tache-new.kksa/filesmanager/post"
+                baseUrl+"/filesmanager/post"
               );
               //loader.url=""
               loader.on("update", function() {
