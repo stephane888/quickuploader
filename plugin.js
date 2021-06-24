@@ -1,7 +1,7 @@
 CKEDITOR.plugins.add("quickuploader", {
   requires: "filetools,dialog",
   icons: "quickuploader,quickuploaderUpload",
-  init: function(editor) {
+  init: function (editor) {
     //configs*
     console.log("CKEDITOR.config : ", CKEDITOR.config);
     const baseUrl = CKEDITOR.config.quickuploaderUploadUrl
@@ -19,7 +19,7 @@ CKEDITOR.plugins.add("quickuploader", {
 
     //
     editor.addCommand("quickuploaderUpload", {
-      exec: function() {
+      exec: function () {
         function getBase64(file) {
           return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -27,26 +27,26 @@ CKEDITOR.plugins.add("quickuploader", {
             //reader.onload = () => resolve(reader.result);
             reader.onloadend = () => {
               var fileArray = reader.result.split(",");
-              resolve({src: reader.result, base64: fileArray[1]});
+              resolve({ src: reader.result, base64: fileArray[1] });
             };
-            reader.onerror = error => reject(error);
+            reader.onerror = (error) => reject(error);
           });
         }
 
         function postFileXhrV2(file) {
-          return new Promise(resolv => {
-            getBase64(file).then(fileBase64 => {
+          return new Promise((resolv) => {
+            getBase64(file).then((fileBase64) => {
               var dataToPost = {
                 _links: {
                   type: {
                     href: this.baseUrl + "/rest/type/file/image"
                   }
                 },
-                filename: [{value: file.name}],
-                filemime: [{value: file.type}],
-                uri: [{value: "public://ckeditor-images/" + file.name}],
-                type: [{target_id: "image"}],
-                data: [{value: fileBase64.base64}]
+                filename: [{ value: file.name }],
+                filemime: [{ value: file.type }],
+                uri: [{ value: "public://ckeditor-images/" + file.name }],
+                type: [{ target_id: "image" }],
+                data: [{ value: fileBase64.base64 }]
               };
               var invocation = new XMLHttpRequest();
               invocation.open(
@@ -65,8 +65,8 @@ CKEDITOR.plugins.add("quickuploader", {
         }
         //
         function postFileXhr(file) {
-          return new Promise(resolv => {
-            getBase64(file).then(fileEncode => {
+          return new Promise((resolv) => {
+            getBase64(file).then((fileEncode) => {
               var invocation = new XMLHttpRequest();
               invocation.open("POST", baseUrl + "/filesmanager/post", true);
               invocation.onreadystatechange = handler;
@@ -81,8 +81,8 @@ CKEDITOR.plugins.add("quickuploader", {
         ///
 
         function postFile(file) {
-          return new Promise(resolv => {
-            getBase64(file).then(fileEncode => {
+          return new Promise((resolv) => {
+            getBase64(file).then((fileEncode) => {
               //console.log("fileEncode : ", fileEncode);
               var headers = new Headers();
               var fileCompose = file.name.split(".");
@@ -98,10 +98,10 @@ CKEDITOR.plugins.add("quickuploader", {
                 }),
                 cache: "default"
               };
-              fetch(baseUrl + "/filesmanager/post", myInit).then(function(
+              fetch(baseUrl + "/filesmanager/post", myInit).then(function (
                 response
               ) {
-                response.json().then(function(json) {
+                response.json().then(function (json) {
                   console.log("response json : ", json);
                   resolv({
                     status: true,
@@ -120,13 +120,13 @@ CKEDITOR.plugins.add("quickuploader", {
         var hiddenUploadElement = CKEDITOR.dom.element.createFromHtml(
           '<input type="file" multiple="multiple">'
         );
-        hiddenUploadElement.once("change", function(evt) {
+        hiddenUploadElement.once("change", function (evt) {
           console.log("fileTools : ", CKEDITOR.fileTools);
           var targetElement = evt.data.getTarget();
           if (targetElement.$.files.length) {
             // Simulate paste event, to support all nice stuff from imagebase (e.g. loaders) (#1730).
             console.log("targetElement ", targetElement);
-            targetElement.$.files.forEach(file => {
+            targetElement.$.files.forEach((file) => {
               /*
               //////////////////////////////////////////////
               var loader = editor.uploadRepository.create(file);
@@ -149,13 +149,24 @@ CKEDITOR.plugins.add("quickuploader", {
               }
               /**/
               //////////////////////////////////////////
-              postFile(file).then(response => {
+              postFile(file).then((response) => {
                 if (response.status) {
-                  console.log("response : ", response);
-                  var img = editor.document.createElement("img");
-                  img.setAttribute("src", response.url);
-                  img.setAttribute("class", "img-fluid");
-                  editor.insertElement(img);
+                  var isImg = file.type.includes("image");
+                  //console.log("responseii : ", isImg);
+                  if (isImg) {
+                    var img = editor.document.createElement("img");
+                    img.setAttribute("src", baseUrl + response.url);
+                    img.setAttribute("class", "img-fluid");
+                    editor.insertElement(img);
+                  } else {
+                    var link = editor.document.createElement("a");
+                    var contenu = document.createTextNode(file.name);
+
+                    link.$.appendChild(contenu);
+                    link.setAttribute("href", baseUrl + response.url);
+                    link.setAttribute("target", "_blank");
+                    editor.insertElement(link);
+                  }
                 }
               });
             });
