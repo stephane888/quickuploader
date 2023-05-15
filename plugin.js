@@ -39,14 +39,14 @@ CKEDITOR.plugins.add("quickuploader", {
               var dataToPost = {
                 _links: {
                   type: {
-                    href: this.baseUrl + "/rest/type/file/image"
-                  }
+                    href: this.baseUrl + "/rest/type/file/image",
+                  },
                 },
                 filename: [{ value: file.name }],
                 filemime: [{ value: file.type }],
                 uri: [{ value: "public://ckeditor-images/" + file.name }],
                 type: [{ target_id: "image" }],
-                data: [{ value: fileBase64.base64 }]
+                data: [{ value: fileBase64.base64 }],
               };
               var invocation = new XMLHttpRequest();
               invocation.open(
@@ -94,9 +94,9 @@ CKEDITOR.plugins.add("quickuploader", {
                   upload: fileEncode.base64,
                   filename: fileCompose[0],
                   id: 88,
-                  ext: fileCompose[1]
+                  ext: fileCompose[1],
                 }),
-                cache: "default"
+                cache: "default",
               };
               fetch(baseUrl + "/filesmanager/post", myInit).then(function (
                 response
@@ -106,7 +106,7 @@ CKEDITOR.plugins.add("quickuploader", {
                   resolv({
                     status: true,
                     reponse: json,
-                    url: json.url
+                    url: json.url,
                   });
                 });
               });
@@ -125,8 +125,8 @@ CKEDITOR.plugins.add("quickuploader", {
           var targetElement = evt.data.getTarget();
           if (targetElement.$.files.length) {
             // Simulate paste event, to support all nice stuff from imagebase (e.g. loaders) (#1730).
-            console.log("targetElement ", targetElement);
-            targetElement.$.files.forEach((file) => {
+            for (const i in targetElement.$.files) {
+              const file = targetElement.$.files[i];
               /*
               //////////////////////////////////////////////
               var loader = editor.uploadRepository.create(file);
@@ -149,27 +149,30 @@ CKEDITOR.plugins.add("quickuploader", {
               }
               /**/
               //////////////////////////////////////////
-              postFile(file).then((response) => {
-                if (response.status) {
-                  var isImg = file.type.includes("image");
-                  //console.log("responseii : ", isImg);
-                  if (isImg) {
-                    var img = editor.document.createElement("img");
-                    img.setAttribute("src", baseUrl + response.url);
-                    img.setAttribute("class", "img-fluid");
-                    editor.insertElement(img);
-                  } else {
-                    var link = editor.document.createElement("a");
-                    var contenu = document.createTextNode(file.name);
+              if (file && file.type && file.size) {
+                console.log("fichier image : ", file);
+                postFile(file).then((response) => {
+                  if (response.status) {
+                    var isImg = file.type.includes("image");
+                    //console.log("responseii : ", isImg);
+                    if (isImg) {
+                      var img = editor.document.createElement("img");
+                      img.setAttribute("src", baseUrl + response.url);
+                      img.setAttribute("class", "img-fluid");
+                      editor.insertElement(img);
+                    } else {
+                      var link = editor.document.createElement("a");
+                      var contenu = document.createTextNode(file.name);
 
-                    link.$.appendChild(contenu);
-                    link.setAttribute("href", baseUrl + response.url);
-                    link.setAttribute("target", "_blank");
-                    editor.insertElement(link);
+                      link.$.appendChild(contenu);
+                      link.setAttribute("href", baseUrl + response.url);
+                      link.setAttribute("target", "_blank");
+                      editor.insertElement(link);
+                    }
                   }
-                }
-              });
-            });
+                });
+              }
+            }
 
             /*
             editor.fire("paste", {
@@ -183,19 +186,19 @@ CKEDITOR.plugins.add("quickuploader", {
           }
         });
         hiddenUploadElement.$.click();
-      }
+      },
     });
     //
     editor.ui.addButton("QuickUploader", {
       label: "Permet d'inserer rapidement les images.",
       command: "quickuploader",
-      toolbar: "insert"
+      toolbar: "insert",
     });
     //
     editor.ui.addButton("QuickUploaderUpload", {
       label: "Permet d'inserer rapidement les images. 2",
       command: "quickuploaderUpload",
-      toolbar: "insert"
+      toolbar: "insert",
     });
-  }
+  },
 });
